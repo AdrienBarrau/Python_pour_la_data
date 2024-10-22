@@ -12,7 +12,7 @@ def get_lichess_games(username, max_games=100):
         'moves': 1,  
         'pgnInJson': 1, 
         'clocks': 1,  
-        'evals': 0,  
+        'evals': 1,  
         'opening': 1,  
         'perfType': 'blitz',  
     }
@@ -54,6 +54,9 @@ def get_lichess_games(username, max_games=100):
         else:
             termination = 'Other'
 
+        evals = game_json.get('analysis', [])
+        evaluations = [analysis.get('eval', 'N/A') for analysis in evals] 
+        
        #params importants
         game_info = {
             'game_id': game_json.get('id'),
@@ -66,6 +69,7 @@ def get_lichess_games(username, max_games=100):
             'opening': game_json.get('opening', {}).get('name', 'Unknown'),
             'game_mode': game_json.get('speed', 'Unknown'),  # Mode de jeu : blitz, bullet, etc.
             'termination': termination,  # Raison de la fin de partie
+            'evaluations': evaluations
         }
 
         games_data.append(game_info)
@@ -88,5 +92,6 @@ for i, game in enumerate(games, start=1):
     print(f"  Ouverture: {game['opening']}")
     print(f"  Coups: {', '.join(game['moves'])}")
     print(f"  Temps par coup: {game['time_per_move']}")
+    print(f"  Évaluations après chaque coup: {game['evaluations']}")
     print("-" * 40)
 
