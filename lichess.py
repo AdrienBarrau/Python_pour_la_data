@@ -1,97 +1,75 @@
 import requests
+
 import json
-from datetime import datetime
 
-def get_lichess_games(username, max_games=100):
-    # URL de l'API de Lichess 
+
+def fetch_games(username, max_games=100):
+    # URL de l'API Lichess pour récupérer les parties
     url = f"https://lichess.org/api/games/user/{username}"
-
-  
-    params = {
-        'max': max_games, 
-        'moves': 1,  
-        'pgnInJson': 1, 
-        'clocks': 1,  
-        'evals': 1,  
-        'opening': 1,  
-        'perfType': 'blitz',  
+    headers = {
+        'Accept': 'application/x-ndjson',
     }
 
-    headers = {
-        'Accept': 'application/x-ndjson'  
+    params = {
+        'max': max_games,
+        'pgnInJson': True,  # Pour recevoir les PGN annotés
+        'withTimestamps': True,  # Pour obtenir les temps par coup
+        'clocks': 1,
+        'evals': 1,  # Inclure les évaluations après chaque coup
+        'opening': 1,
     }
 
     response = requests.get(url, headers=headers, params=params)
+    response.raise_for_status()
 
-    if response.status_code != 200:
-        print(f"Erreur: Impossible de récupérer les données pour {username}")
-        return []
+    return response.text
 
-    games = response.text.splitlines()
+def save_games_to_pgn(games_data, filename):
+    with open(filename, 'w') as f:
+        f.write(games_data)
+'''
+def main():
+    username = input("Entrez le nom d'utilisateur de Lichess: ")  #EricRosen
+    max_games = int(input("Entrez le nombre maximum de parties à récupérer: "))
 
-    games_data = []
+    print(f"Récupération des parties pour l'utilisateur {username}...")
+    games_data = fetch_games(username, max_games)
 
-    for game in games:
-  
-        game_json = json.loads(game)
+    # Enregistrement des parties dans un fichier PGN
+    filename = f"{username}_games.pgn"
+    save_games_to_pgn(games_data, filename)
 
-        timestamp = game_json.get('createdAt', 0) // 1000  # Convertir le timestamp en secondes
-        game_date = datetime.utcfromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
+    print(f"Les parties ont été sauvegardées dans le fichier {filename}")
 
-        status = game_json.get('status')
-        if status == 'mate':
-            termination = 'Checkmate'
-        elif status == 'resign':
-            termination = 'Resignation'
-        elif status == 'stalemate':
-            termination = 'Stalemate'
-        elif status == 'timeout':
-            termination = 'Timeout'
-        elif status == 'draw':
-            termination = 'Draw'
-        elif status == 'outoftime':
-            termination = 'Opponent ran out of time'
-        else:
-            termination = 'Other'
+if __name__ == "__main__":
+    main()
+'''
 
-        evals = game_json.get('analysis', [])
-        evaluations = [analysis.get('eval', 'N/A') for analysis in evals] 
-        
-       #params importants
+
+def tab_info_games(username, max_games):          #renvoi une tableau tab tel a que tab[i] est un tableau contenant toutesles infos intéressantes de la partie numéro i (dans l'ordre): le type de la partie (souvent blitz ou bullet), le nom d'utilisateur jouant les blancs, le nom d'utilisateur jouant les noirs, le vainqueur, la manière de gagner, elo blanc, elo noir, ouverture, les coups, les evaluations avant chaque coups, les temps  
+  games_data=fetch_games(username, max_games)
+  print(games_data)
+  tab = []
+
+  for line in games_data.splitlines():
+        game = json.loads(line)  # Convertir chaque ligne JSON en dictionnaire
+
         game_info = {
-            'game_id': game_json.get('id'),
-            'date': game_date,
-            'winner': game_json.get('winner', 'draw'),  # gagnant: "white", "black" ou "draw"
-            'opponent': game_json.get('players', {}).get('black' if game_json['players']['white']['user']['name'] == username else 'white', {}).get('user', {}).get('name', 'Unknown'),
-            'result': 'won' if game_json.get('winner') == game_json['players']['white']['user']['name'] else 'lost' if game_json.get('winner') else 'draw',
-            'moves': game_json.get('moves', '').split(),
-            'time_per_move': game_json.get('clocks', []),
-            'opening': game_json.get('opening', {}).get('name', 'Unknown'),
-            'game_mode': game_json.get('speed', 'Unknown'),  # Mode de jeu : blitz, bullet, etc.
-            'termination': termination,  # Raison de la fin de partie
-            'evaluations': evaluations
+            'type': game.get('speed', 'Unknown'),
+            'white_player': game['players']['white']['user']['name'] if 'user' in game['players']['white'] else 'Anonymous',
+            'black_player': game['players']['black']['user']['name'] if 'user' in game['players']['black'] else 'Anonymous',
+            'winner': game.get('winner', 'draw'),
+            'termination': game.get('status', 'Unknown'),
+            'white_elo': game['players']['white'].get('rating', 'Unknown'),
+            'black_elo': game['players']['black'].get('rating', 'Unknown'),
+            'opening': game['opening'].get('name', 'Unknown') if 'opening' in game else 'Unknown',
+            'moves': game.get('moves', '').split(),
+            'evaluations': [analysis.get('eval', 'N/A') for analysis in game.get('analysis', [])],
+            'clocks': game.get('clocks', [])
         }
+        
+        tab.append(game_info)
+    
+  return tab
 
-        games_data.append(game_info)
-
-    return games_data
-
-
-username = "Hikaru1"  
-games = get_lichess_games(username, max_games=100)
-
-
-for i, game in enumerate(games, start=1):
-    print(f"Partie {i}:")
-    print(f"  ID: {game['game_id']}")
-    print(f"  Date: {game['date']}")
-    print(f"  Adversaire: {game['opponent']}")
-    print(f"  Résultat: {game['result']}")
-    print(f"  Raison de la fin: {game['termination']}")
-    print(f"  Mode de jeu: {game['game_mode']}")
-    print(f"  Ouverture: {game['opening']}")
-    print(f"  Coups: {', '.join(game['moves'])}")
-    print(f"  Temps par coup: {game['time_per_move']}")
-    print(f"  Évaluations après chaque coup: {game['evaluations']}")
-    print("-" * 40)
-
+tab_info_games("EricRosen",5)
