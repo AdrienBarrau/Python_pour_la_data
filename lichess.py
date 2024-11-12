@@ -73,3 +73,36 @@ def tab_info_games(username, max_games):          #renvoi une tableau tab tel a 
   return tab
 
 tab_info_games("EricRosen",5)
+
+username = "EricRosen"
+
+def user_evaluations_list(n): # n-th game
+    if tab_info_games(username,5)[n]['white_player'] == username:
+        # even indices
+        evaluations_list = tab_info_games(username,5)[n]['evaluations'][0::2]
+    else:
+        # odd indices
+        evaluations_list = tab_info_games(username,5)[n]['evaluations'][1::2]
+    return evaluations_list
+
+def move_evaluations_list(n):
+    u_list = user_evaluations_list(n)
+    m_list = [u_list[0]]
+    for i in range(1, len(u_list) - 1):
+        m_list.append(u_list[i] - u_list[i-1])
+    return m_list
+
+move_evaluations_list(0)
+
+
+def user_clocks_list(n): # n-th game
+    clocks_time=[(tab_info_games("EricRosen",5)[n]['clocks'][i]-tab_info_games("EricRosen",5)[n]['clocks'][i+1]) for i in (len(tab_info_games("EricRosen",5)[n]['clocks'])-1)]   #marche pas
+    if tab_info_games(username,5)[n]['white_player'] == username:
+        # even indices
+        clocks_list = clocks_time[0::2]
+    else:
+        # odd indices
+        clocks_list = clocks_time[1::2]
+    return clocks_list
+
+user_clocks_list(0)
