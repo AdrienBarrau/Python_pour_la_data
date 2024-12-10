@@ -123,3 +123,8 @@ def lin_reg_blitz(n,i):
   return reg.coef_,reg.intercept_
 
 lin_reg_blitz(19,30)
+
+#Biais: l evaluation seules n' explique pas la victoire, ex: utiliser 20 seconds pour jouer le meilleur coup lorsqu il nous reste 30 secondes n'est pas une bonne idée. on pourrait faire une évluation qui prend en compte le temps restant des jouers. il faudrait des regressions multiples. prendre en compte l heure de la partie
+# stat descriptives: tps de reflexion en fonction du numéro du coup, stat de victoire par ouverture (moyenne), 
+#objectif: diagnostique personnalisé, si pattern repetitif (piege ou on tombe frequemment dans l ouverture), en informer l utilisateur , ou bien faire un bilan sur les differentes tranches de élo sur lichess (moins risqués à présenter)
+
