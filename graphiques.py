@@ -41,3 +41,82 @@ def plot_avg_reflection_time(df):
 
 # Appel de la fonction pour tracer l'histogramme
 plot_avg_reflection_time(df)
+
+
+
+
+import pandas as pd
+import matplotlib.pyplot as plt
+
+def plot_win_percentage(df):
+    """
+    Affiche un camembert avec les pourcentages de victoires, défaites et nulles.
+    """
+    # Calculer les pourcentages
+    total_games = len(df)
+    wins = len(df[df['winner'] == 'white']) + len(df[df['winner'] == 'black'])
+    draws = total_games - wins
+
+    # Préparer les données
+    labels = ['Victoires', 'Défaites', 'Nulles']
+    sizes = [wins, total_games - wins - draws, draws]
+    colors = ['lightgreen', 'salmon', 'lightblue']
+
+    # Générer le camembert
+    plt.figure(figsize=(6, 6))
+    plt.pie(sizes, labels=labels, autopct='%1.1f%%', colors=colors, startangle=90)
+    plt.title("Pourcentage de Victoires, Défaites et Nulles")
+    plt.axis('equal')
+    plt.show()
+
+def plot_white_black_win_percentage(df):
+    """
+    Affiche un camembert avec les pourcentages de victoires avec les blancs et les noirs.
+    """
+    # Calculer les pourcentages
+    white_wins = len(df[df['winner'] == 'white'])
+    black_wins = len(df[df['winner'] == 'black'])
+    total_wins = white_wins + black_wins
+
+    # Préparer les données
+    labels = ['Blancs', 'Noirs']
+    sizes = [white_wins / total_wins * 100, black_wins / total_wins * 100]
+    colors = ['white', 'black']
+
+    # Générer le camembert
+    plt.figure(figsize=(6, 6))
+    plt.pie(sizes, labels=labels, autopct='%1.1f%%', colors=colors, startangle=90)
+    plt.title("Pourcentage de Victoires par Couleur")
+    plt.axis('equal')
+    plt.show()
+
+def plot_opening_stats(df):
+    """
+    Affiche un histogramme des ouvertures les plus fréquentes et leurs résultats.
+    """
+    # Calculer les statistiques par ouverture
+    openings = df['opening'].value_counts().head(10)  # Top 10 ouvertures
+    openings_win_rate = df[df['winner'] != 'draw'].groupby('opening')['winner'].value_counts(normalize=True).unstack()
+
+    # Filtrer les ouvertures fréquentes
+    openings_win_rate = openings_win_rate.loc[openings.index]
+
+    # Générer un histogramme
+    openings_win_rate.plot(kind='bar', stacked=True, figsize=(12, 6), color=['lightgreen', 'salmon'])
+    plt.title("Pourcentage de Victoires et Défaites par Ouverture (Top 10)")
+    plt.ylabel("Pourcentage")
+    plt.xlabel("Ouverture")
+    plt.xticks(rotation=45)
+    plt.legend(["Victoire Blancs", "Victoire Noirs"])
+    plt.tight_layout()
+    plt.show()
+
+# Exemple d'utilisation
+plot_win_percentage(df)
+plot_white_black_win_percentage(df)
+plot_opening_stats(df)
+
+
+
+
+
