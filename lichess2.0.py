@@ -103,18 +103,18 @@ if __name__ == "__main__":
     #print(df.iloc[0])
     
 
+
 # regressions lineaire sur la perte en centipions au ième coup.
-def lin_reg_blitz(n,i):
+def lin_reg_blitz(n,i,Y,X):
   tab_evals=[]
   tab_clocks=[]
-  
   parties_blitz=df[df['type']=='blitz']
   for j in range (min(n, len(parties_blitz))):
 
-    if i < len(parties_blitz.iloc[j]['user_evaluations']) and i < len(parties_blitz.iloc[j]['user_clocks']):
+    if i < len(parties_blitz.iloc[j][Y]) and i < len(parties_blitz.iloc[j][X]):
 
-      tab_evals=tab_evals+[[parties_blitz.iloc[j]['user_evaluations'][i]]]
-      tab_clocks=tab_clocks+[ parties_blitz.iloc[j]['user_clocks'][i]]
+      tab_evals=tab_evals+[[parties_blitz.iloc[j][Y][i]]]
+      tab_clocks=tab_clocks+[ parties_blitz.iloc[j][X][i]]
   
      
 
@@ -122,7 +122,7 @@ def lin_reg_blitz(n,i):
   reg.fit(tab_evals,tab_clocks)
   return reg.coef_,reg.intercept_
 
-lin_reg_blitz(19,30)
+lin_reg_blitz(19,30,'user_evaluations','user_clocks')
 
 #Biais: l evaluation seules n' explique pas la victoire, ex: utiliser 20 seconds pour jouer le meilleur coup lorsqu il nous reste 30 secondes n'est pas une bonne idée. on pourrait faire une évluation qui prend en compte le temps restant des jouers. il faudrait des regressions multiples. prendre en compte l heure de la partie
 # stat descriptives: tps de reflexion en fonction du numéro du coup, stat de victoire par ouverture (moyenne), 
