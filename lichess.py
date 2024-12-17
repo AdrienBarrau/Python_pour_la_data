@@ -6,6 +6,8 @@ import pandas as pd
 
 import statistics as sta
 
+import chess
+
 def fetch_games(username, max_games=100):
     # URL de l'API Lichess pour récupérer les parties
     url = f"https://lichess.org/api/games/user/{username}"
@@ -252,7 +254,9 @@ def pieces_taken (moves) :
 
 print(pieces_taken(['d4', 'd5', 'c4', 'e6']))
         
+board = chess.Board()
 
+print(board.parse_san('d4').uci())
 
 
 #def user_evaluations_list(n): # n-th game
