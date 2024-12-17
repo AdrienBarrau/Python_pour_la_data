@@ -180,37 +180,108 @@ def info_player (username,max_games): #A very ugly function that gives back a pa
 
 print(info_player("EricRosen",20))
 
-
-
 username = "EricRosen"
 
-def user_evaluations_list(n): # n-th game
-    if tab_info_games(username,5)[n]['white_player'] == username:
-        # even indices
-        evaluations_list = tab_info_games(username,5)[n]['evaluations'][0::2]
-    else:
-        # odd indices
-        evaluations_list = tab_info_games(username,5)[n]['evaluations'][1::2]
-    return evaluations_list
+print(tab_info_games(username,1))
 
-def move_evaluations_list(n):
-    u_list = user_evaluations_list(n)
-    m_list = [u_list[0]]
-    for i in range(1, len(u_list) - 1):
-        m_list.append(u_list[i] - u_list[i-1])
-    return m_list
+Board=[(a,b) for a in [11,12,13,14,15,16,17,18] for b in [1,2,3,4,5,6,7,8]]
+
+Pieces=[('WRa',5),('WPa',1),0,0,0,0,('BPa',1),('BRa',5),
+('WNb',3),('WPb',1),0,0,0,0,('BPb',1),('BNb',3), 
+('WBc',3),('WPc',1),0,0,0,0,('BPc',1),('BBc',3),
+('WQ',9),('WPd',1),0,0,0,0,('BPd',1),('BQ',9),
+('WK',0),('WPe',1),0,0,0,0,('BPe',1),('BK',0),
+('WBf',3),('WPf',1),0,0,0,0,('BPf',1),('BBf',3),
+('WNg',3),('WPg',1),0,0,0,0,('BPg',1),('BNg',3),
+('WRh',5),('WPh',1),0,0,0,0,('BPh',1),('BRh',5)]
+
+Initial_board={}
+
+k=0
+for j in Board :
+    Initial_board[j]=Pieces[k]
+    k+=1
+
+print(Initial_board)
+
+Taken=[]
+
+def convert(a,b) :
+    if a == 'a' : return (11,int(b))
+    elif a == 'b' : return (12,int(b))
+    elif a == 'c' : return (13,int(b))
+    elif a == 'd' : return (14,int(b))
+    elif a == 'e' : return (15,int(b))
+    elif a == 'f' : return (16,int(b))
+    elif a == 'g' : return (17,int(b))
+    elif a == 'h' : return (18,int(b))
+
+def pieces_taken (moves) :
+    board=copy.deepcopy(Initial_board)
+    turn=1
+    for i in moves :
+        if i.find('+')!=-1:
+            mo=[*i].pop()
+        else :
+            mo=[*i]
+        new_p=convert(mo[-2],mo[-1])
+        if turn%2==1 :
+            if len(mo)==2 :
+                if i.find('x')==-1 :
+                    board[new_p]= ('WP'+mo[-2],1)
+                    if board[(new_p[0],new_p[1]-1)]==0 :
+                        board[(new_p[0],new_p[1]-2)]=0
+                    else : board[(new_p[0],new_p[1]-1)]=0
+                else :
+                    Taken.append([board[new_p],turn])
+                    board[new_p]= ('WP'+mo[-2],1)
+                    board[convert([*i][0],new_p[1]-1)]=0
+        else :
+            if len(mo)==2 :
+                if i.find('x')==-1 :
+                    board[new_p]= ('BP'+mo[-2],1)
+                    if board[(new_p[0],new_p[1]+1)]==0 :
+                        board[(new_p[0],new_p[1]+2)]=0
+                    else : board[(new_p[0],new_p[1]+1)]=0
+                else :
+                    Taken.append([board[new_p],turn])
+                    board[new_p]= ('BP'+mo[-2],1)
+                    board[convert([*i][0],new_p[1]+1)]=0
+        turn+=1
+    return board
+
+print(pieces_taken(['d4', 'd5', 'c4', 'e6']))
+        
+
+
+
+#def user_evaluations_list(n): # n-th game
+    #if tab_info_games(username,5)[n]['white_player'] == username:
+        # even indices
+        #evaluations_list = tab_info_games(username,5)[n]['evaluations'][0::2]
+    #else:
+        # odd indices
+        #evaluations_list = tab_info_games(username,5)[n]['evaluations'][1::2]
+    #return evaluations_list
+
+#def move_evaluations_list(n):
+    #u_list = user_evaluations_list(n)
+    #m_list = [u_list[0]]
+    #for i in range(1, len(u_list) - 1):
+        #m_list.append(u_list[i] - u_list[i-1])
+    #return m_list
 
 #move_evaluations_list(0)
 
 
-def user_clocks_list(n): # n-th game
-    clocks_time=[(tab_info_games("EricRosen",5)[n]['clocks'][i]-tab_info_games("EricRosen",5)[n]['clocks'][i+1]) for i in (len(tab_info_games("EricRosen",5)[n]['clocks'])-1)]   #marche pas
-    if tab_info_games(username,5)[n]['white_player'] == username:
+#def user_clocks_list(n): # n-th game
+    #clocks_time=[(tab_info_games("EricRosen",5)[n]['clocks'][i]-tab_info_games("EricRosen",5)[n]['clocks'][i+1]) for i in (len(tab_info_games("EricRosen",5)[n]['clocks'])-1)]   #marche pas
+    #if tab_info_games(username,5)[n]['white_player'] == username:
         # even indices
-        clocks_list = clocks_time[0::2]
-    else:
+        #clocks_list = clocks_time[0::2]
+    #else:
         # odd indices
-        clocks_list = clocks_time[1::2]
-    return clocks_list
+        #clocks_list = clocks_time[1::2]
+    #return clocks_list
 
 #user_clocks_list(0)
