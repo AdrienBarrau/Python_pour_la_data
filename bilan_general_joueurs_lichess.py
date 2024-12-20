@@ -1,10 +1,22 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+#!pip install chess
+import chess.pgn
 class ChessGame:
 
-    def __init__(self, game, username=None):
+    def __init__(self, game, username):
         self.white_player = game.headers.get("White", "Unknown")
         self.black_player = game.headers.get("Black", "Unknown")
-        self.white_elo = int(game.headers.get("WhiteElo", 0)) if game.headers.get("WhiteElo") else None
-        self.black_elo = int(game.headers.get("BlackElo", 0)) if game.headers.get("BlackElo") else None
+         # Gestion des valeurs Elo invalides
+        try:
+            self.white_elo = int(game.headers.get("WhiteElo", 0)) if game.headers.get("WhiteElo") and game.headers.get("WhiteElo").isdigit() else None
+        except ValueError:
+            self.white_elo = None
+
+        try:
+            self.black_elo = int(game.headers.get("BlackElo", 0)) if game.headers.get("BlackElo") and game.headers.get("BlackElo").isdigit() else None
+        except ValueError:
+            self.black_elo = None
         self.result = game.headers.get("Result", "Unknown")
         self.termination = game.headers.get("Termination", "Unknown")
         self.opening = game.headers.get("Opening", "Unknown")
@@ -13,39 +25,56 @@ class ChessGame:
         self.move_count = len(self.moves)
         self.evaluations = [analysis.get('eval', 'N/A') for analysis in game.headers.get('analysis', [])]
         self.clocks = game.headers.get('clocks', [])
+        self.game_type = self._classify_game_type(self.time_control)  # bullet (le plus rapide), blitz, rapid ou classique (le plus lent)
         self.username = username
 
     def _extract_moves(self, game):
-        """Extrait les coups de la partie sous forme de liste."""
         return [move.uci() for move in game.mainline_moves()]
-    
 
-def fetch_games_from_pgn(pgn_file_path, username=None, max_games=10000):
-    """
-    Extrait les parties d'un fichier PGN et retourne un DataFrame.
+    def _classify_game_type(self, time_control):
+        """
+        Classe le type de la partie en fonction du TimeControl.
+        Exemples de time_control :
+        - "300+5" : 5 minutes avec incrément 5 sec (blitz)
+        - "60+0" : 1 minute sans incrément (bullet)
+        - "1800+0" : 30 minutes sans incrément (rapid)
+        """
+        if not time_control or time_control == "-":
+            return "Unknown"
 
-    Args:
-        pgn_file_path (str): Chemin vers le fichier PGN.
-        username (str): Nom de l'utilisateur pour un filtrage optionnel.
-        max_games (int): Nombre maximum de parties à importer.
+        try:
+            base, increment = time_control.split("+")
+            base = int(base)  # Temps de base en secondes
+            increment = int(increment)  # Incrément
 
-    Returns:
-        pd.DataFrame: Un DataFrame contenant les informations des parties.
-    """
+            total_time = base + (40 * increment)
+            if total_time < 180:  # 180 secondes=3 minutes
+                return "Bullet"
+            elif total_time <= 600:
+              return "Blitz"
+            elif total_time <= 1800:
+              return "Rapid"
+            else:
+              return "Classical"   #plus de 30 minutes
+        except ValueError:
+            return "Unknown"
+
+def fetch_games_from_pgn(pgn_file_path, username, max_games=1000):
+
     games_list = []
-    
-    # Ouvrir et lire le fichier PGN
+
+
     with open(pgn_file_path) as pgn_file:
         for _ in range(max_games):
             game = chess.pgn.read_game(pgn_file)
-            if game is None:  # Fin du fichier
+            if game is None:
                 break
 
-            # Créer un objet ChessGame
+
             chess_game = ChessGame(game, username=username)
-            
-            # Ajouter les informations de la partie à la liste
-            games_list.append({
+
+
+            games_list.append({           # d'autres variables peuvent s'ajouter
                 "White": chess_game.white_player,
                 "Black": chess_game.black_player,
                 "WhiteElo": chess_game.white_elo,
@@ -57,60 +86,34 @@ def fetch_games_from_pgn(pgn_file_path, username=None, max_games=10000):
                 "MoveCount": chess_game.move_count,
                 "Moves": chess_game.moves,
                 "evaluations": chess_game.evaluations,
-                "clocks":chess_game.clocks
+                "clocks":chess_game.clocks,
+                "game_type":chess_game.game_type
             })
-    
-    # Convertir en DataFrame
+
     return pd.DataFrame(games_list)
-
-# Exemple d'utilisation
-if __name__ == "__main__":
-    # Chemin du fichier PGN
-    pgn_file_path = "/lichess_db_standard_rated_2014-09.pgn"
-
-    # Importer les parties dans un DataFrame
-    df_games = fetch_games_from_pgn(pgn_file_path, max_games=10000)
-
-    # Afficher les premières lignes du DataFrame
-    print("Aperçu des données :")
-    print(df_games.head())
-
-    # Filtrer uniquement les parties blitz
-    #df_blitz = df_games[df_games["TimeControl"].str.contains("blitz", case=False, na=False)]  il faudra preciser une fourchette de temps
-  
-
-elo_min = 1600
-elo_max =1800
-
-# Filtrer les parties où les deux joueurs sont dans la tranche définie
-filtered_df = df_games[
-    (df_games["WhiteElo"] >= elo_min) & (df_games["WhiteElo"] <= elo_max) &
-    (df_games["BlackElo"] >= elo_min) & (df_games["BlackElo"] <= elo_max)
-]
 
 
 
 
 def statistiques_descriptives(df):
 
-  # Répartition des résultats
+
   results_count = df["Result"].value_counts()
   print("\nRépartition des résultats :")
   print(results_count)
 
-  # Camembert des résultats
+
   plt.figure(figsize=(6, 6))
   plt.pie(results_count, labels=results_count.index, autopct='%1.1f%%', colors=["lightgreen", "lightcoral", "lightblue"])
   plt.title("Répartition des résultats (Blancs, Noirs, Nulles)")
   plt.show()
 
 
-  # Moyenne des coups par partie
+
   average_moves = df["MoveCount"].mean()
   print(f"\nNombre moyen de coups par partie : {average_moves:.2f}")
 
-    
-  # Histogramme des nombres de coups
+
   plt.figure(figsize=(8, 5))
   plt.hist(df["MoveCount"], bins=20, color="skyblue", edgecolor="black")
   plt.title("Distribution du nombre de coups par partie")
@@ -145,8 +148,39 @@ def statistiques_descriptives(df):
   plt.legend(["Victoire Blancs", "Victoire Noirs"])
   plt.tight_layout()
   plt.show()
+  print(df["game_type"])
+  game_type_counts = df["game_type"].value_counts()
+  print("\nNombre de parties par type :")
+  print(game_type_counts)
 
-statistiques_descriptives(filtered_df)
+  # Visualisation sous forme de diagramme
+  plt.figure(figsize=(8, 6))
+  game_type_counts.plot(kind="bar", color=["lightblue", "lightgreen", "lightcoral", "gold"])
+  plt.title("Nombre de parties par type")
+  plt.xlabel("Type de partie")
+  plt.ylabel("Nombre de parties")
+  plt.xticks(rotation=0)
+  plt.show()
 
-print(len(filtered_df))
 
+
+if __name__ == "__main__":
+    df_games = fetch_games_from_pgn(pgn_file_path,username, max_games=1000)
+    df_games_perso=fetch_games_from_pgn("/content/games.pgn",username,max_games=1000)
+    #print(df_games.head())
+
+# FILTRATION DU DATAFRAME
+
+elo_min = 1600
+elo_max =1800
+
+# Ajoutez un filtre, celui la garde les parties ou le elo des DEUX JOUEURS est entre elo_min, elo_max
+filtered_df_elo = df_games[
+    (df_games["WhiteElo"] >= elo_min) & (df_games["WhiteElo"] <= elo_max) &
+    (df_games["BlackElo"] >= elo_min) & (df_games["BlackElo"] <= elo_max)
+]
+
+#filtered_df_blitz = df_games[df_games["game_type"] == "Blitz"]
+
+#statistiques_descriptives(df_games)   s'execute directement
+#statistiques_descriptives(df_games_perso)  # il faut d abord executer analyse_personnelle pour que ca marche
