@@ -1,3 +1,4 @@
+import requests
 def download_lichess_pgn(username, token, output_file):
     """
     Télécharge toutes les parties d'un utilisateur au format PGN et les sauvegarde dans un fichier.
