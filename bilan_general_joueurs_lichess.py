@@ -1,7 +1,21 @@
 import pandas as pd
 import matplotlib.pyplot as plt
-#!pip install chess
+!pip install chess
 import chess.pgn
+!pip install zstandard
+import zstandard as zstd
+
+compressed_file = "/content/lichess_db_standard_rated_2014-09.pgn.zst"    #chemin vers le fichier pgn compressed
+decompressed_file = "/content/lichess_db_standard_rated_2014-09.pgn"
+
+
+with open(compressed_file, 'rb') as compressed:     #Décompression
+    with open(decompressed_file, 'wb') as decompressed:
+        dctx = zstd.ZstdDecompressor()
+        dctx.copy_stream(compressed, decompressed)
+
+pgn_file_path=decompressed_file
+
 class ChessGame:
 
     def __init__(self, game, username):
