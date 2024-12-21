@@ -2,20 +2,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 !pip install chess
 import chess.pgn
-!pip install zstandard
-import zstandard as zstd
-
-compressed_file = "/content/lichess_db_standard_rated_2014-09.pgn.zst"    #chemin vers le fichier pgn compressed
-decompressed_file = "/content/lichess_db_standard_rated_2014-09.pgn"
-
-
-with open(compressed_file, 'rb') as compressed:     #Décompression
-    with open(decompressed_file, 'wb') as decompressed:
-        dctx = zstd.ZstdDecompressor()
-        dctx.copy_stream(compressed, decompressed)
-
-pgn_file_path=decompressed_file
-
 class ChessGame:
 
     def __init__(self, game, username):
@@ -35,15 +21,39 @@ class ChessGame:
         self.termination = game.headers.get("Termination", "Unknown")
         self.opening = game.headers.get("Opening", "Unknown")
         self.time_control = game.headers.get("TimeControl", "Unknown")
-        self.moves = self._extract_moves(game)
+        self.moves, self.evaluations, self.clocks = self._extract_moves(game)
         self.move_count = len(self.moves)
-        self.evaluations = [analysis.get('eval', 'N/A') for analysis in game.headers.get('analysis', [])]
-        self.clocks = game.headers.get('clocks', [])
+        
         self.game_type = self._classify_game_type(self.time_control)  # bullet (le plus rapide), blitz, rapid ou classique (le plus lent)
         self.username = username
 
+
     def _extract_moves(self, game):
-        return [move.uci() for move in game.mainline_moves()]
+        moves = []
+        evaluations = []  #tab des evaluations
+        clocks = []  #tab du temps restant
+
+        for node in game.mainline():
+            move = node.move.uci()
+            moves.append(move)
+
+            if "eval" in node.comment:
+                eval_str = node.comment.split("[%eval ")[1].split("]")[0]  
+                try:
+                    evaluations.append(float(eval_str))
+                except ValueError:
+                    evaluations.append(None)
+            else:
+                evaluations.append(None)
+
+            # Récupérer le temps restant
+            if "clk" in node.comment:
+                clk_str = node.comment.split("[%clk ")[1].split("]")[0]
+                clocks.append(clk_str)
+            else:
+                clocks.append(None)
+
+        return moves, evaluations, clocks
 
     def _classify_game_type(self, time_control):
         """
@@ -179,8 +189,8 @@ def statistiques_descriptives(df):
 
 
 if __name__ == "__main__":
-    df_games = fetch_games_from_pgn(pgn_file_path,username, max_games=1000)
-    df_games_perso=fetch_games_from_pgn("/content/games.pgn",username,max_games=1000)
+    df_games = fetch_games_from_pgn(pgn_file_path,username, max_games=1000)  #toutes les parties lichess sur un mois
+    df_games_perso=fetch_games_from_pgn("/content/games.pgn",username,max_games=1000)   #parties d un certain utilisateur
     #print(df_games.head())
 
 # FILTRATION DU DATAFRAME
@@ -194,7 +204,11 @@ filtered_df_elo = df_games[
     (df_games["BlackElo"] >= elo_min) & (df_games["BlackElo"] <= elo_max)
 ]
 
-#filtered_df_blitz = df_games[df_games["game_type"] == "Blitz"]
-
-#statistiques_descriptives(df_games)   s'execute directement
-#statistiques_descriptives(df_games_perso)  # il faut d abord executer analyse_personnelle pour que ca marche
+filtered_df_blitz = df_games[df_games["game_type"] == "Blitz"]
+filtered_df_bullet = df_games[df_games["game_type"] == "Bullet"]
+filtered_evaluated_perso = df_games_perso[df_games_perso["evaluations"].apply(lambda x: isinstance(x, list) and any(eval is not None for eval in x))]
+#statistiques_descriptives(df_games)
+statistiques_descriptives(df_games_perso)
+#statistiques_descriptives(filtered_df_blitz)
+#statistiques_descriptives(filtered_df_bullet)
+statistiques_descriptives(filtered_evaluated_perso)
