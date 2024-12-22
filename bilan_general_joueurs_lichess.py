@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 !pip install chess
 import chess.pgn
@@ -83,7 +84,7 @@ class ChessGame:
         except ValueError:
             return "Unknown"
 
-def fetch_games_from_pgn(pgn_file_path, username, max_games=1000):
+def fetch_games_from_pgn(pgn_file_path, username, max_games=10000):
 
     games_list = []
 
@@ -118,7 +119,6 @@ def fetch_games_from_pgn(pgn_file_path, username, max_games=1000):
 
 
 
-
 def statistiques_descriptives(df):
 
 
@@ -131,8 +131,6 @@ def statistiques_descriptives(df):
   plt.pie(results_count, labels=results_count.index, autopct='%1.1f%%', colors=["lightgreen", "lightcoral", "lightblue"])
   plt.title("Répartition des résultats (Blancs, Noirs, Nulles)")
   plt.show()
-
-
 
   average_moves = df["MoveCount"].mean()
   print(f"\nNombre moyen de coups par partie : {average_moves:.2f}")
@@ -186,11 +184,44 @@ def statistiques_descriptives(df):
   plt.xticks(rotation=0)
   plt.show()
 
+  centipawn_losses = []
+  max_moves = 0
 
+  for _, row in df.iterrows():
+        evaluations = row["evaluations"]
+        if evaluations and isinstance(evaluations, list):
+            losses = []
+            for i in range(1, len(evaluations)):
+                if evaluations[i] is not None and evaluations[i - 1] is not None:
+                    loss = abs(evaluations[i] - evaluations[i - 1])
+                    losses.append(loss)
+                else:
+                    losses.append(None)  # Si une évaluation manque, ignorer ce coup
+            centipawn_losses.append(losses)
+            max_moves = max(max_moves, len(losses))
+
+    # Calculer la perte moyenne par numéro de coup
+  losses_per_move = [[] for _ in range(max_moves)]
+  for losses in centipawn_losses:
+      for move_idx, loss in enumerate(losses):
+          if loss is not None:
+              losses_per_move[move_idx].append(loss)
+
+
+  average_losses = [np.mean(move_losses) if len(move_losses) > 0 else None for move_losses in losses_per_move]
+
+  plt.figure(figsize=(12, 6))
+  plt.plot(range(1, len(average_losses) + 1), average_losses, marker="o", color="blue")
+  plt.title("Perte moyenne de centipions par numéro de coup")
+  plt.xlabel("Numéro de coup")
+  plt.ylabel("Perte moyenne de centipions")
+  plt.grid(True)
+  plt.tight_layout()
+  plt.show()
 
 if __name__ == "__main__":
-    df_games = fetch_games_from_pgn(pgn_file_path,username, max_games=1000)  #toutes les parties lichess sur un mois
-    df_games_perso=fetch_games_from_pgn("/content/games.pgn",username,max_games=1000)   #parties d un certain utilisateur
+    df_games = fetch_games_from_pgn(pgn_file_path,username, max_games=10000)
+    df_games_perso=fetch_games_from_pgn("/content/games.pgn",username,max_games=1000)
     #print(df_games.head())
 
 # FILTRATION DU DATAFRAME
@@ -206,9 +237,13 @@ filtered_df_elo = df_games[
 
 filtered_df_blitz = df_games[df_games["game_type"] == "Blitz"]
 filtered_df_bullet = df_games[df_games["game_type"] == "Bullet"]
+filtered_evaluated= df_games[df_games["evaluations"].apply(lambda x: isinstance(x, list) and any(eval is not None for eval in x))]
 filtered_evaluated_perso = df_games_perso[df_games_perso["evaluations"].apply(lambda x: isinstance(x, list) and any(eval is not None for eval in x))]
+
+
 #statistiques_descriptives(df_games)
-statistiques_descriptives(df_games_perso)
+#statistiques_descriptives(filtered_evaluated)
+#statistiques_descriptives(df_games_perso)
 #statistiques_descriptives(filtered_df_blitz)
 #statistiques_descriptives(filtered_df_bullet)
-statistiques_descriptives(filtered_evaluated_perso)
+#statistiques_descriptives(filtered_evaluated_perso)
