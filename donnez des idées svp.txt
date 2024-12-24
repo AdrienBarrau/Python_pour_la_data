@@ -3,3 +3,4 @@
 # au niveau individuel, regarder la frequence d analyse des parties, voir si y a un biais( ex: analyser que les parties gagne ou perdu, calculer ca pour chaques joueurs)
 #erreurs les plus frequentes
 #faire de la classification : prevoir le elo en fonction du nombre de parties dans differents types, des ouvertures jouee.
+#regressions pour connaitre la qualite des coups quand on est mieux(eval >2  si on est blanc par exemple), ou moins bien (eval<-2 si on est blanc)
