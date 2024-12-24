@@ -333,7 +333,7 @@ if __name__ == "__main__":
     df_games_perso=fetch_games_from_pgn("/content/games.pgn",username,max_games=1000)
     df_games_perso['Plays_white']= plays_white(df_games_perso)
     df_games_perso['Won']= won(df_games_perso)
-    add_variables_perso(df_games_perso)
+    #add_variables_perso(df_games_perso)
     #print(df_games.head())
 
 # FILTRATION DU DATAFRAME
