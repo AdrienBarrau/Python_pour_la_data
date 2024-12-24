@@ -3,6 +3,22 @@ import numpy as np
 import matplotlib.pyplot as plt
 !pip install chess
 import chess.pgn
+!pip install zstandard
+import zstandard as zstd
+
+
+compressed_file = "/content/lichess_db_standard_rated_2013-01.pgn.zst"   # Chemin des fichiers
+decompressed_file = "/content/lichess_db_standard_rated_2013-01.pgn"
+
+
+with open(compressed_file, 'rb') as compressed:   # Décompression du zst
+    with open(decompressed_file, 'wb') as decompressed:
+        dctx = zstd.ZstdDecompressor()
+        dctx.copy_stream(compressed, decompressed)
+
+pgn_file_path=decompressed_file
+
+
 class ChessGame:
 
     def __init__(self, game, username):
