@@ -5,6 +5,9 @@ import matplotlib.pyplot as plt
 import chess.pgn
 !pip install zstandard
 import zstandard as zstd
+import statistics as sta
+import datetime
+import time
 
 
 compressed_file = "/content/lichess_db_standard_rated_2013-01.pgn.zst"   # Chemin des fichiers
@@ -235,9 +238,102 @@ def statistiques_descriptives(df):
   plt.tight_layout()
   plt.show()
 
+def plays_white(data):
+    White=[]
+    for i in data['White']:
+        if i==username:
+            White.append(1)
+        else:
+            White.append(0)
+    return White
+
+def won (data) :
+    Won=[]
+    for i in range(len(data['Result'])):
+        if data['Plays_white'][i]==1:
+            Won.append(int([*data['Result'][i]][0]))
+        else:
+            Won.append(int([*data['Result'][i]][2]))
+    return Won
+
+def convert_clock(list_clock):
+    new_clock=[]
+    for i in list_clock :
+        x = time.strptime(i.split(',')[0],'%H:%M:%S')
+        new_clock.append(datetime.timedelta(hours=x.tm_hour,minutes=x.tm_min,seconds=x.tm_sec).total_seconds())
+    return new_clock
+
+def add_variables_perso (data): 
+    # Retrieve only the chosen player evaluations and clocks
+    their_times=[]
+    their_evals=[]
+    for i in range(len(data['White'])):
+        if data['White'][i]==1 :
+            their_times.append(convert_clock(data['clocks'][i][::2]))
+            their_evals.append(data['evaluations'][i][::2])
+        else :
+            their_times.append(convert_clock(data['clocks'][i][1::2]))
+            their_evals.append(data['evaluations'][i][1::2])
+    #initiate new variables
+    m_o_r=[]
+    m_m_1_r=[]
+    m_m_2_r=[]
+    m_e_r=[]
+    m_o_t=[]
+    m_m_1_t=[]
+    m_m_2_t=[]
+    m_e_t=[]
+    Len_game=[] 
+    for i in range(len(data['White'])):
+        n= len(their_evals[i])
+        if n>26 : 
+            indices=[(0,6), (6,16), (16,26),(26,n)] #split the moves in four categories : opening (5 moves), middle game 1 (10 moves), middle game 2 (10 moves), end game (The remaining moves) 
+            means_ev=[sta.mean(their_evals[i][a:b]) for a,b in indices] #compute for each slice the mean rating of the move
+            means_time=[sta.mean(their_times[i][a:b]) for a,b in indices] #compute for each slice the mean time taken for the move
+            Len_game.append("Long") #Get the length of the game based on the number of moves
+        elif n>16 :
+            indices=[(0,6), (6,16),(16,n)]
+            means_ev=[sta.mean(their_evals[i][a:b]) for a,b in indices]
+            means_time=[sta.mean(their_times[i][a:b]) for a,b in indices]
+            means_time.append('NaN') #NaN is added if there wasn't enough moves in the game to complete the last slices
+            means_ev.append('NaN')
+            Len_game.append("Medium")
+        elif len(ev)>6 :
+            indices=[(0,6), (6,n)]
+            means_ev=[sta.mean(their_evals[i][a:b]) for a,b in indices]
+            means_time=[sta.mean(their_times[i][a:b]) for a,b in indices]
+            means_time+=['NaN','NaN']
+            means_ev+=['NaN','NaN']
+            Len_game.append("Short")
+        else : #If the game had less than 6 moves the analysis in terms of opening, middle game, is not useful : nothing is computed
+            means_ev=['Nan' for k in range(4)]
+            means_time=['Nan' for k in range(4)]
+            Len_game.append("Too Short")
+        m_o_r.append(means_ev[0]) #Then the computed measures are added
+        m_m_1_r.append(means_ev[1])
+        m_m_2_r.append(means_ev[2])
+        m_e_r.append(means_ev[3])
+        m_o_t.append(means_time[0])
+        m_m_1_t.append(means_time[1])
+        m_m_2_t.append(means_time[2])
+        m_e_t.append(means_time[3])
+
+    data["length_game"]=Len_game
+    data["mean_opening_rating"]=m_o_r #the new colums are added to the data set
+    data["mean_middle1_rating"]=m_m_1_r
+    data["mean_middle2_rating"]=m_m_2_r
+    data["mean_end_rating"]=m_e_1_r
+    data["mean_opening_time"]=m_o_t
+    data["mean_middle1_time"]=m_m_1_t
+    data["mean_middle2_time"]=m_m_2_t
+    data["mean_end_time"]=m_e_1_t
+
 if __name__ == "__main__":
     df_games = fetch_games_from_pgn(pgn_file_path,username, max_games=10000)
     df_games_perso=fetch_games_from_pgn("/content/games.pgn",username,max_games=1000)
+    df_games_perso['Plays_white']= plays_white(df_games_perso)
+    df_games_perso['Won']= won(df_games_perso)
+    add_variables_perso(df_games_perso)
     #print(df_games.head())
 
 # FILTRATION DU DATAFRAME
