@@ -263,6 +263,7 @@ def convert_clock(list_clock):
         new_clock.append(datetime.timedelta(hours=x.tm_hour,minutes=x.tm_min,seconds=x.tm_sec).total_seconds())
     return new_clock
 
+
 def add_variables_perso (data): 
     # Retrieve only the chosen player evaluations and clocks
     their_times=[]
@@ -285,30 +286,62 @@ def add_variables_perso (data):
     m_e_t=[]
     Len_game=[] 
     for i in range(len(data['White'])):
-        n= len(their_evals[i])
-        if n>26 : 
-            indices=[(0,6), (6,16), (16,26),(26,n)] #split the moves in four categories : opening (5 moves), middle game 1 (10 moves), middle game 2 (10 moves), end game (The remaining moves) 
-            means_ev=[sta.mean(their_evals[i][a:b]) for a,b in indices] #compute for each slice the mean rating of the move
-            means_time=[sta.mean(their_times[i][a:b]) for a,b in indices] #compute for each slice the mean time taken for the move
-            Len_game.append("Long") #Get the length of the game based on the number of moves
-        elif n>16 :
-            indices=[(0,6), (6,16),(16,n)]
-            means_ev=[sta.mean(their_evals[i][a:b]) for a,b in indices]
-            means_time=[sta.mean(their_times[i][a:b]) for a,b in indices]
-            means_time.append('NaN') #NaN is added if there wasn't enough moves in the game to complete the last slices
-            means_ev.append('NaN')
-            Len_game.append("Medium")
-        elif len(ev)>6 :
-            indices=[(0,6), (6,n)]
-            means_ev=[sta.mean(their_evals[i][a:b]) for a,b in indices]
-            means_time=[sta.mean(their_times[i][a:b]) for a,b in indices]
-            means_time+=['NaN','NaN']
-            means_ev+=['NaN','NaN']
-            Len_game.append("Short")
-        else : #If the game had less than 6 moves the analysis in terms of opening, middle game, is not useful : nothing is computed
-            means_ev=['Nan' for k in range(4)]
-            means_time=['Nan' for k in range(4)]
-            Len_game.append("Too Short")
+        try : 
+            First_eval=their_evals[i][0]
+        except IndexError :
+            their_evals[i]=[None]
+        if (First_eval is None) :
+            means_ev=['NaN' for k in range(4)]
+            n= len(their_times[i])
+            if n>26 : 
+                indices=[(0,6), (6,16), (16,26),(26,n)] #split the moves in four categories : opening (5 moves), middle game 1 (10 moves), middle game 2 (10 moves), end game (The remaining moves) 
+                means_time=[sta.mean(their_times[i][a:b]) for a,b in indices] #compute for each slice the mean time taken for the move
+                Len_game.append("Long") #Get the length of the game based on the number of moves
+            elif n>16 :
+                indices=[(0,6), (6,16),(16,n)]
+                means_time=[sta.mean(their_times[i][a:b]) for a,b in indices]
+                means_time.append('NaN') #NaN is added if there wasn't enough moves in the game to complete the last slices
+                Len_game.append("Medium")
+            elif n>6 :
+                indices=[(0,6), (6,n)]
+                means_time=[sta.mean(their_times[i][a:b]) for a,b in indices]
+                means_time+=['NaN','NaN']
+                Len_game.append("Short")
+            else : #If the game had less than 6 moves the analysis in terms of opening, middle game, is not useful : nothing is computed
+                means_time=['NaN' for k in range(4)]
+                Len_game.append("Too Short")
+        else :
+            their_evals_clean_i=[]
+            for j in their_evals[i] :
+                if j is None :
+                    their_evals_clean_i.append(0)
+                else :
+                    their_evals_clean_i.append(j)
+            n= len(their_evals_clean_i)
+            if n>26 : 
+                indices=[(0,6), (6,16), (16,26),(26,n)] #split the moves in four categories : opening (5 moves), middle game 1 (10 moves), middle game 2 (10 moves), end game (The remaining moves) 
+                means_ev=[sta.mean(their_evals_clean_i[a:b]) for a,b in indices] #compute for each slice the mean rating of the move
+                means_time=[sta.mean(their_times[i][a:b]) for a,b in indices] #compute for each slice the mean time taken for the move
+                Len_game.append("Long") #Get the length of the game based on the number of moves
+            elif n>16 :
+                indices=[(0,6), (6,16),(16,n)]
+                means_ev=[sta.mean(their_evals_clean_i[a:b]) for a,b in indices]
+                means_time=[sta.mean(their_times[i][a:b]) for a,b in indices]
+                means_time.append('NaN') #NaN is added if there wasn't enough moves in the game to complete the last slices
+                means_ev.append('NaN')
+                Len_game.append("Medium")
+            elif n>6 :
+                indices=[(0,6), (6,n)]
+                means_ev=[sta.mean(their_evals_clean_i[a:b]) for a,b in indices]
+                means_time=[sta.mean(their_times[i][a:b]) for a,b in indices]
+                means_time+=['NaN','NaN']
+                means_ev+=['NaN','NaN']
+                Len_game.append("Short")
+            else : #If the game had less than 6 moves the analysis in terms of opening, middle game, is not useful : nothing is computed
+                means_ev=['NaN' for k in range(4)]
+                means_time=['NaN' for k in range(4)]
+                Len_game.append("Too Short")
+    
         m_o_r.append(means_ev[0]) #Then the computed measures are added
         m_m_1_r.append(means_ev[1])
         m_m_2_r.append(means_ev[2])
@@ -317,16 +350,15 @@ def add_variables_perso (data):
         m_m_1_t.append(means_time[1])
         m_m_2_t.append(means_time[2])
         m_e_t.append(means_time[3])
-
     data["length_game"]=Len_game
     data["mean_opening_rating"]=m_o_r #the new colums are added to the data set
     data["mean_middle1_rating"]=m_m_1_r
     data["mean_middle2_rating"]=m_m_2_r
-    data["mean_end_rating"]=m_e_1_r
+    data["mean_end_rating"]=m_e_r
     data["mean_opening_time"]=m_o_t
     data["mean_middle1_time"]=m_m_1_t
     data["mean_middle2_time"]=m_m_2_t
-    data["mean_end_time"]=m_e_1_t
+    data["mean_end_time"]=m_e_t
 
 if __name__ == "__main__":
     df_games = fetch_games_from_pgn(pgn_file_path,username, max_games=10000)
