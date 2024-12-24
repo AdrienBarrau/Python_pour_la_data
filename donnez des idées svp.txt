@@ -4,3 +4,4 @@
 #erreurs les plus frequentes
 #faire de la classification : prevoir le elo en fonction du nombre de parties dans differents types, des ouvertures jouee.
 #regressions pour connaitre la qualite des coups quand on est mieux(eval >2  si on est blanc par exemple), ou moins bien (eval<-2 si on est blanc)
+#verifier si le systeme de elo marche (reg)
