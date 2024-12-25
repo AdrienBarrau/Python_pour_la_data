@@ -368,24 +368,36 @@ if __name__ == "__main__":
     #add_variables_perso(df_games_perso)
     #print(df_games.head())
 
-# FILTRATION DU DATAFRAME
 
-elo_min = 1600
-elo_max =1800
+# affichage et filtrations
 
-# Ajoutez un filtre, celui la garde les parties ou le elo des DEUX JOUEURS est entre elo_min, elo_max
-filtered_df_elo = df_games[
-    (df_games["WhiteElo"] >= elo_min) & (df_games["WhiteElo"] <= elo_max) &
-    (df_games["BlackElo"] >= elo_min) & (df_games["BlackElo"] <= elo_max)
-]
+
+
+elo_min =1700
+elo_max =2000
+
+#Ajoutez un filtre, celui la garde les parties ou le elo des DEUX JOUEURS est entre elo_min, elo_max
+
+filtered_df_elo = df_games[(df_games["WhiteElo"] >= elo_min) & (df_games["WhiteElo"] <= elo_max) &(df_games["BlackElo"] >= elo_min) & (df_games["BlackElo"] <= elo_max)]
 
 filtered_df_blitz = df_games[df_games["game_type"] == "Blitz"]
 filtered_df_bullet = df_games[df_games["game_type"] == "Bullet"]
 filtered_evaluated= df_games[df_games["evaluations"].apply(lambda x: isinstance(x, list) and any(eval is not None for eval in x))]
 filtered_evaluated_perso = df_games_perso[df_games_perso["evaluations"].apply(lambda x: isinstance(x, list) and any(eval is not None for eval in x))]
 
+filtered_df_elo_blitz=filtered_df_elo[filtered_df_elo["game_type"] == "Blitz"]
+filtered_df_elo_bullet=filtered_df_elo[filtered_df_elo["game_type"] == "Bullet"]
+#print(df_games["evaluations"])
+#print(filtered_evaluated_perso["evaluations"][12])
 
 #statistiques_descriptives(df_games)
+statistiques_descriptives(filtered_df_bullet)
+statistiques_descriptives(filtered_df_blitz)
+
+statistiques_descriptives(filtered_df_elo_blitz)
+statistiques_descriptives(filtered_df_elo_bullet)
+
+
 #statistiques_descriptives(filtered_evaluated)
 #statistiques_descriptives(df_games_perso)
 #statistiques_descriptives(filtered_df_blitz)
