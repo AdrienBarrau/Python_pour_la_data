@@ -1,0 +1,49 @@
+# a faire tourner apres bilan_general_joueur_lichess.py
+
+def filter_analysed_blitz_games(df, elo_range_step=200):
+
+    Filtre les parties de type 'Blitz' et calcule la perte moyenne en centipions par tranche d'ELO.
+
+
+    blitz_df = df[df["game_type"] == "Blitz"]
+    blitz_df = blitz_df[blitz_df["centipawn_losses"].apply(lambda x: isinstance(x, list) and len(x) > 0)]
+    print(f"Nombre de parties Blitz analysées: {len(blitz_df)}")
+
+
+    player_stats = []
+    for player, group in blitz_df.groupby("White"):
+        mean_loss = group["centipawn_losses"].apply(
+            lambda losses: np.mean([abs(loss) for loss in losses if loss is not None])
+        ).mean()                     #Moyenne des pertes
+        player_elo = group["WhiteElo"].iloc[0]  
+        player_stats.append({"Player": player, "ELO": player_elo, "MeanCentipawnLoss": mean_loss})
+
+  
+    stats_df = pd.DataFrame(player_stats)
+    stats_df["ELO_Range"] = pd.cut(
+        stats_df["ELO"],
+        bins=np.arange(800, stats_df["ELO"].max() + elo_range_step, elo_range_step),
+        labels=[f"{i}-{i+elo_range_step-1}" for i in range(800, stats_df["ELO"].max(), elo_range_step)]
+    )
+
+    return stats_df
+
+def plot_elo_vs_centipawn_loss(stats_df):
+
+ 
+    mean_loss_per_elo = stats_df.groupby("ELO_Range")["MeanCentipawnLoss"].mean()
+
+    plt.figure(figsize=(12, 6))
+    plt.plot(mean_loss_per_elo.index, mean_loss_per_elo.values, marker="o", linestyle="-", color="blue")
+    plt.title("Perte moyenne en pions par tranche d'ELO")
+    
+    plt.xlabel("Tranche d'ELO")
+    plt.ylabel("Perte moyenne en pions")
+    plt.xticks(rotation=45)
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+
+
+filtered_stats_df = filter_analysed_blitz_games(df_games)  
+plot_elo_vs_centipawn_loss(filtered_stats_df)
