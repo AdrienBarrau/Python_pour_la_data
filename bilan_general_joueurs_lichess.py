@@ -263,7 +263,7 @@ def statistiques_descriptives(df):
   plt.tight_layout()
   plt.show()
 
-def plays_white(data):
+def plays_white(data): #this function takes the dataframe of the games of one player and gives back a column composed of 0s and 1s : 1 if the game was won
     White=[]
     for i in data['White']:
         if i==username:
@@ -272,7 +272,7 @@ def plays_white(data):
             White.append(0)
     return White
 
-def won (data) :
+def won (data) : #this function takes the dataframe of the games of one player and gives back a column composed of 0s and 1s : 1 if the player played white
     Won=[]
     for i in range(len(data['Result'])):
         if data['Plays_white'][i]==1:
@@ -281,7 +281,7 @@ def won (data) :
             Won.append(int([*data['Result'][i]][2]))
     return Won
 
-def convert_clock(list_clock):
+def convert_clock(list_clock): #this function converts a chess clock in format '00:00:59" into an integer that is the number of seconds
     new_clock=[]
     for i in list_clock :
         x = time.strptime(i.split(',')[0],'%H:%M:%S')
@@ -289,7 +289,7 @@ def convert_clock(list_clock):
     return new_clock
 
 
-def add_variables_perso (data): 
+def add_variables_perso (data): #this function takes the dataframe of the games of one player and adds a few columns to the data set, namely the mean evaluations and seconds used at relevant moments of the game
     # Retrieve only the chosen player evaluations and clocks
     their_times=[]
     their_evals=[]
@@ -310,7 +310,7 @@ def add_variables_perso (data):
     m_m_2_t=[]
     m_e_t=[]
     Len_game=[] 
-    for i in range(len(data['White'])):
+    for i in range(len(data['White'])): #compute the variables
         try : 
             First_eval=their_evals[i][0]
         except IndexError :
@@ -385,7 +385,7 @@ def add_variables_perso (data):
     data["mean_middle2_time"]=m_m_2_t
     data["mean_end_time"]=m_e_t
 
-def convert(a,b) :
+def convert(a,b) : #this function takes a position on the board in format 'a4' and converts it to a tuple composed of two integers
     if a == 'a' : return (11,int(b))
     elif a == 'b' : return (12,int(b))
     elif a == 'c' : return (13,int(b))
@@ -395,19 +395,19 @@ def convert(a,b) :
     elif a == 'g' : return (17,int(b))
     elif a == 'h' : return (18,int(b))
 
-def important_events (moves) :
-    Initial_board=[(a,b) for a in [11,12,13,14,15,16,17,18] for b in [1,2,3,4,5,6,7,8]]
-    Pieces=[('WRa',5),('WPa',1),0,0,0,0,('BPa',1),('BRa',5),
+def important_events (moves) : #This function takes a sequence of moves in UCI format, simulates the game and lists all important events in the game (a piece taken or castling)
+    Initial_board=[(a,b) for a in [11,12,13,14,15,16,17,18] for b in [1,2,3,4,5,6,7,8]] #creates the initial empty board of positions
+    Pieces=[('WRa',5),('WPa',1),0,0,0,0,('BPa',1),('BRa',5), #a piece is described by a tuple : a string with its color 'W', its type 'R' and its column of start if it needs to be differentiated 'a' ; and an integer with its "value"
     ('WNb',3),('WPb',1),0,0,0,0,('BPb',1),('BNb',3), 
     ('WBc',3),('WPc',1),0,0,0,0,('BPc',1),('BBc',3),
     ('WQ',9),('WPd',1),0,0,0,0,('BPd',1),('BQ',9),
     ('WK',0),('WPe',1),0,0,0,0,('BPe',1),('BK',0),
     ('WBf',3),('WPf',1),0,0,0,0,('BPf',1),('BBf',3),
     ('WNg',3),('WPg',1),0,0,0,0,('BPg',1),('BNg',3),
-    ('WRh',5),('WPh',1),0,0,0,0,('BPh',1),('BRh',5)]
+    ('WRh',5),('WPh',1),0,0,0,0,('BPh',1),('BRh',5)] # lists all pieces in the game
     Board={}
     k=0
-    for j in Initial_board :
+    for j in Initial_board : # Assignate in a dictionnary a piece or a 0 (items) for each position (keys)
         Board[j]=Pieces[k]
         k+=1
     number_move=1
@@ -415,23 +415,23 @@ def important_events (moves) :
     for i in moves :
         uci_list=[*i]
         initial=convert(uci_list[0],uci_list[1])
-        final=convert(uci_list[2],uci_list[3])
-        if Board[final]!=0 :
+        final=convert(uci_list[2],uci_list[3]) #converts the uci format into our format of starting and end position for a moving piece
+        if Board[final]!=0 : #If there is already a piece in the final position, that piece and the move are added to the Events list
             Events.append([Board[final],number_move])
         Board[final]=Board[initial]
         Board[initial]=0
-        if i== 'e1g1' and number_move<30 :
+        if i== 'e1g1' and number_move<30 : #If there is castling the rook also needs to be moved, and the castling is added to the Events list
             initial=convert('h','1')
             final=convert('f','1')
             Board[final]=Board[initial]
             Board[initial]=0
-            Events.append([('WCS',0),number_move])
+            Events.append([('WCS',0),number_move]) #CS stands for 'Castling' 'Small'
         elif i== 'e1c1' and number_move<30:
             initial=convert('a','1')
             final=convert('d','1')
             Board[final]=Board[initial]
             Board[initial]=0
-            Events.append([('WCG',0),number_move])
+            Events.append([('WCG',0),number_move]) #CG stands for 'Castling' 'Great'
         elif i== 'e8g8' and number_move<30:
             initial=convert('h','8')
             final=convert('f','8')
@@ -447,7 +447,8 @@ def important_events (moves) :
         number_move+=1
     return Events
 
-def main_events (events,color,piece) :
+def main_events (events,color,piece) : #This function takes a list of events in a game (computed by important events), the color as a string 'W', the type of piece as a string 'Q', and gives back a tuple
+    #first a boolean of wether or not that piece was taken during the game (or the castling made), then either an integer (if that piece was taken) that stands for the move at which it happened; or a string 'NaN' if the piece was not taken
     for i in events:
         if [*i[0][0]][0]==color and [*i[0][0]][1]==piece :
             return (True,i[1])
