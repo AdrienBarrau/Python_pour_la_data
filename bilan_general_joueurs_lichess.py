@@ -403,3 +403,7 @@ statistiques_descriptives(filtered_df_elo_bullet)
 #statistiques_descriptives(filtered_df_blitz)
 #statistiques_descriptives(filtered_df_bullet)
 #statistiques_descriptives(filtered_evaluated_perso)
+
+print(len(filtered_evaluated)/len(df_games))
+print(len(filtered_evaluated_perso)/len(df_games_perso))
+
