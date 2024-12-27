@@ -47,6 +47,21 @@ class ChessGame:
         self.game_type = self._classify_game_type(self.time_control)  # bullet (le plus rapide), blitz, rapid ou classique (le plus lent)
         self.username = username
 
+        Events=important_events(self.moves)
+        self.white_queen_taken_bool=main_events(Events,'W','Q')[0]
+        self.white_queen_taken_move=main_events(Events,'W','Q')[1]
+        self.black_queen_taken_bool=main_events(Events,'B','Q')[0]
+        self.black_queen_taken_move=main_events(Events,'B','Q')[1]
+        self.white_castling_bool=main_events(Events,'W','C')[0]
+        self.white_castling_move=main_events(Events,'W','C')[1]
+        self.black_castling_bool=main_events(Events,'B','C')[0]
+        self.black_castling_move=main_events(Events,'B','C')[1]
+        if self.white_queen_taken_bool and self.black_queen_taken_bool :
+            self.queen_exchange_bool= abs(self.black_queen_taken_move-self.white_queen_taken_move)<2
+        else : self.queen_exchange_bool= False
+        if self.queen_exchange_bool :
+            self.queen_exchange_move=max(self.white_queen_taken_move,self.black_queen_taken_move)
+        else : self.queen_exchange_move='NaN'
 
     def _extract_moves(self, game):
         moves = []
@@ -131,7 +146,17 @@ def fetch_games_from_pgn(pgn_file_path, username, max_games=10000):
                 "Moves": chess_game.moves,
                 "evaluations": chess_game.evaluations,
                 "clocks":chess_game.clocks,
-                "game_type":chess_game.game_type
+                "game_type":chess_game.game_type,
+                "white_queen_taken_bool":chess_game.white_queen_taken_bool,
+                "white_queen_taken_move":chess_game.white_queen_taken_move,
+                "black_queen_taken_bool":chess_game.black_queen_taken_bool,
+                "black_queen_taken_move":chess_game.black_queen_taken_move,
+                "white_castling_bool":chess_game.white_castling_bool,
+                "white_castling_move":chess_game.white_castling_move,
+                "black_castling_bool":chess_game.black_castling_bool,
+                "black_castling_move":chess_game.black_castling_move,
+                "queen_exchange_bool":chess_game.queen_exchange_bool,
+                "queen_exchange_move":chess_game.queen_exchange_move
             })
 
     return pd.DataFrame(games_list)
@@ -359,6 +384,74 @@ def add_variables_perso (data):
     data["mean_middle1_time"]=m_m_1_t
     data["mean_middle2_time"]=m_m_2_t
     data["mean_end_time"]=m_e_t
+
+def convert(a,b) :
+    if a == 'a' : return (11,int(b))
+    elif a == 'b' : return (12,int(b))
+    elif a == 'c' : return (13,int(b))
+    elif a == 'd' : return (14,int(b))
+    elif a == 'e' : return (15,int(b))
+    elif a == 'f' : return (16,int(b))
+    elif a == 'g' : return (17,int(b))
+    elif a == 'h' : return (18,int(b))
+
+def important_events (moves) :
+    Initial_board=[(a,b) for a in [11,12,13,14,15,16,17,18] for b in [1,2,3,4,5,6,7,8]]
+    Pieces=[('WRa',5),('WPa',1),0,0,0,0,('BPa',1),('BRa',5),
+    ('WNb',3),('WPb',1),0,0,0,0,('BPb',1),('BNb',3), 
+    ('WBc',3),('WPc',1),0,0,0,0,('BPc',1),('BBc',3),
+    ('WQ',9),('WPd',1),0,0,0,0,('BPd',1),('BQ',9),
+    ('WK',0),('WPe',1),0,0,0,0,('BPe',1),('BK',0),
+    ('WBf',3),('WPf',1),0,0,0,0,('BPf',1),('BBf',3),
+    ('WNg',3),('WPg',1),0,0,0,0,('BPg',1),('BNg',3),
+    ('WRh',5),('WPh',1),0,0,0,0,('BPh',1),('BRh',5)]
+    Board={}
+    k=0
+    for j in Initial_board :
+        Board[j]=Pieces[k]
+        k+=1
+    number_move=1
+    Events=[]
+    for i in moves :
+        uci_list=[*i]
+        initial=convert(uci_list[0],uci_list[1])
+        final=convert(uci_list[2],uci_list[3])
+        if Board[final]!=0 :
+            Events.append([Board[final],number_move])
+        Board[final]=Board[initial]
+        Board[initial]=0
+        if i== 'e1g1' and number_move<30 :
+            initial=convert('h','1')
+            final=convert('f','1')
+            Board[final]=Board[initial]
+            Board[initial]=0
+            Events.append([('WCS',0),number_move])
+        elif i== 'e1c1' and number_move<30:
+            initial=convert('a','1')
+            final=convert('d','1')
+            Board[final]=Board[initial]
+            Board[initial]=0
+            Events.append([('WCG',0),number_move])
+        elif i== 'e8g8' and number_move<30:
+            initial=convert('h','8')
+            final=convert('f','8')
+            Board[final]=Board[initial]
+            Board[initial]=0
+            Events.append([('BCS',0),number_move])
+        elif i== 'e8c8' and number_move<30:
+            initial=convert('a','8')
+            final=convert('d','8')
+            Board[final]=Board[initial]
+            Board[initial]=0
+            Events.append([('BCG',0),number_move])
+        number_move+=1
+    return Events
+
+def main_events (events,color,piece) :
+    for i in events:
+        if [*i[0][0]][0]==color and [*i[0][0]][1]==piece :
+            return (True,i[1])
+    return (False,'NaN')
 
 if __name__ == "__main__":
     df_games = fetch_games_from_pgn(pgn_file_path,username, max_games=10000)
