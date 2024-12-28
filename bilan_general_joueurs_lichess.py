@@ -9,6 +9,7 @@ import statistics as sta
 import datetime
 import time
 import statsmodels.api as sm
+import streamlit as st
 
 
 compressed_file = "/content/lichess_db_standard_rated_2013-01.pgn.zst"   # Chemin des fichiers
@@ -568,10 +569,53 @@ def significant_predictors(username,max_games=2000): #This function takes the us
         elif result.pvalues[i]<0.05 and result.params[i]>0:
             positive_predictors.append(variables[i])
     print(result.summary())
-    return("negative predictors :",negative_predictors,"positive_predictors :",positive_predictors)
+    return positive_predictors, negative_predictors
 
 
-print(significant_predictors('EricRosen',1000))
+
+# APP STREAMLIT
+# Exécuter --->  python -m streamlit run Python4DS/predictors_streamlit.py
+st.title("Analyse des prédicteurs significatifs")
+
+username = st.text_input("Pseudonyme Lichess")
+max_games = st.number_input("Nombre de parties à considérer pour l'analyse", min_value=1, max_value=2000, value=100, step=1)
+
+dic = {
+    "length_game_short": "une partie rapide",
+    "length_game_medium": "une partie de durée intermédiaire",
+    "length_game_long": "une partie longue",
+    "queen_exchange_dummy": "un échange de dames",
+    "Enemy_castling_dummy": "un roque de la part de votre adversaire",
+    "Player_castling_dummy": "un roque de votre part"
+}
+
+if st.button("Analyser"):
+    if username != "":
+        try:
+            positive_predictors, negative_predictors = significant_predictors(username, max_games)
+
+            st.subheader("Résultats")
+
+            text = f"Au regard des {max_games} parties considérées dans cette analyse, les conclusions sont les suivantes :\n"
+            if positive_predictors:
+                french_pos_pred = ", ".join([dic[p] for p in positive_predictors if p in dic])
+                text += f"- :green[**Prédicteurs positifs :**] {french_pos_pred} augmentent vos chances de victoire.\n"
+            else:
+                text += "- Aucun prédicteur positif significatif.\n"
+
+            if negative_predictors:
+                french_neg_pred = ", ".join([dic[p] for p in negative_predictors if p in dic])
+                text += f"- :red[**Prédicteurs négatifs :**] {french_neg_pred} diminuent vos chances de victoire.\n"
+            else:
+                text += "- Aucun prédicteur négatif significatif."
+            
+            st.write(text)
+        except Exception as error:
+            st.error(f"Erreur : {error}")
+    else:
+        st.warning("Entrer un pseudonyme Lichess.")
+
+
 
 # affichage et filtrations
 
