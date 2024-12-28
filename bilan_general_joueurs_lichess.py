@@ -8,6 +8,7 @@ import zstandard as zstd
 import statistics as sta
 import datetime
 import time
+import statsmodels.api as sm
 
 
 compressed_file = "/content/lichess_db_standard_rated_2013-01.pgn.zst"   # Chemin des fichiers
@@ -375,8 +376,87 @@ def add_variables_perso (data): #this function takes the dataframe of the games 
         m_m_1_t.append(means_time[1])
         m_m_2_t.append(means_time[2])
         m_e_t.append(means_time[3])
-    data["length_game"]=Len_game
-    data["mean_opening_rating"]=m_o_r #the new colums are added to the data set
+    Enemy_queen_move=[] #initiate new variables
+    Enemy_castling_move=[]
+    Enemy_castling_dummy=[]
+    Player_queen_move=[]
+    Player_castling_move=[]
+    Player_castling_dummy=[]
+    Elo_diff=[]
+    for i in range(len(data['White'])): #splits the games info into variables specific to the player considered or their opponent
+        if data['White'][i]==1 :
+            Elo_diff.append(data['WhiteElo'][i]-data['BlackElo'][i])
+            Enemy_queen_move.append(data['black_queen_taken_move'][i])
+            Enemy_castling_move.append(data['black_castling_move'][i])
+            Player_queen_move.append(data['white_queen_taken_move'][i])
+            Player_castling_move.append(data['white_castling_move'][i])
+            if data["white_castling_bool"][i]:
+                Player_castling_dummy.append(1)
+            else :
+                Player_castling_dummy.append(0)
+            if data["black_castling_bool"][i]:
+                Enemy_castling_dummy.append(1)
+            else :
+                Enemy_castling_dummy.append(0)
+        else :
+            Elo_diff.append(data['BlackElo'][i]-data['WhiteElo'][i])
+            Player_queen_move.append(data['black_queen_taken_move'][i])
+            Player_castling_move.append(data['black_castling_move'][i])
+            Enemy_queen_move.append(data['white_queen_taken_move'][i])
+            Enemy_castling_move.append(data['white_castling_move'][i])
+            if data["black_castling_bool"][i]:
+                Player_castling_dummy.append(1)
+            else :
+                Player_castling_dummy.append(0)
+            if data["white_castling_bool"][i]:
+                Enemy_castling_dummy.append(1)
+            else :
+                Enemy_castling_dummy.append(0)
+    L_g_ts=[] #initiate new variables
+    L_g_s=[]
+    L_g_m=[]
+    L_g_l=[]
+    for i in Len_game : #Len game is transformed into four dummies
+        if i=='Too Short':
+            L_g_ts.append(1)
+            L_g_s.append(0)
+            L_g_m.append(0)
+            L_g_l.append(0)
+        elif i=='Short':
+            L_g_ts.append(0)
+            L_g_s.append(1)
+            L_g_m.append(0)
+            L_g_l.append(0)
+        elif i=='Medium':
+            L_g_ts.append(0)
+            L_g_s.append(0)
+            L_g_m.append(1)
+            L_g_l.append(0)
+        elif i=='Long':
+            L_g_ts.append(0)
+            L_g_s.append(0)
+            L_g_m.append(0)
+            L_g_l.append(1)
+    queen_exchange_dummy=[]
+
+    for i in data["queen_exchange_bool"]:
+        if i :
+            queen_exchange_dummy.append(1)
+        else :
+            queen_exchange_dummy.append(0)
+    data["Player_castling_dummy"]=Player_castling_dummy #the new colums are added to the data set
+    data["Enemy_castling_dummy"]=Enemy_castling_dummy
+    data["queen_exchange_dummy"]=queen_exchange_dummy
+    data["Enemy_queen_taken_move"]=Enemy_queen_move
+    data["Enemy_castling_move"]=Enemy_castling_move
+    data["Player_queen_taken_move"]=Player_queen_move
+    data["Player_castling_move"]=Player_castling_move
+    data["Elo_diff"]=Elo_diff
+    data["length_game_too_short"]=L_g_ts
+    data["length_game_short"]=L_g_s
+    data["length_game_medium"]=L_g_m
+    data["length_game_long"]=L_g_l
+    data["mean_opening_rating"]=m_o_r
     data["mean_middle1_rating"]=m_m_1_r
     data["mean_middle2_rating"]=m_m_2_r
     data["mean_end_rating"]=m_e_r
@@ -454,14 +534,44 @@ def main_events (events,color,piece) : #This function takes a list of events in 
             return (True,i[1])
     return (False,'NaN')
 
+username='EricRosen'
+
 if __name__ == "__main__":
     df_games = fetch_games_from_pgn(pgn_file_path,username, max_games=10000)
     df_games_perso=fetch_games_from_pgn("/content/games.pgn",username,max_games=1000)
     df_games_perso['Plays_white']= plays_white(df_games_perso)
     df_games_perso['Won']= won(df_games_perso)
-    #add_variables_perso(df_games_perso)
-    #print(df_games.head())
+    add_variables_perso(df_games_perso)
 
+def significant_predictors(username,max_games=2000): #This function takes the username of a Lichess player, and the number of their games you want to consider
+    #It runs a logistic regression on a few variables of interest, and gives back a list of the significant predicors, and wether or not they increase this username's Lichess player chance of winning (positive predictors) or losing (negative predictor)
+    data=fetch_games_from_pgn("/home/onyxia/Python_pour_la_data/games.pgn",username,max_games)
+    data['Plays_white']= plays_white(data)
+    data['Won']= won(data)
+    add_variables_perso(data)
+    Intercept=[1 for i in range(len(data["Plays_white"]))]
+    data["Intercept"]=Intercept
+    variables=['Intercept',"length_game_short","length_game_medium","length_game_long","queen_exchange_dummy","Enemy_castling_dummy","Player_castling_dummy"]
+    columns=data[['Won']+variables]
+    columns=columns.dropna(how='any')
+    y=columns.iloc[:,0].to_numpy()
+    all_variables_columns=[i for i in range(1,len(variables)+1)]
+    print(all_variables_columns)
+    x=columns.iloc[:,all_variables_columns].to_numpy()
+    model = sm.Logit(y,x)
+    result=model.fit()
+    positive_predictors=[]
+    negative_predictors=[]
+    for i in range(1,len(variables)):
+        if result.pvalues[i]<0.05 and result.params[i]<0:
+            negative_predictors.append(variables[i])
+        elif result.pvalues[i]<0.05 and result.params[i]>0:
+            positive_predictors.append(variables[i])
+    print(result.summary())
+    return("negative predictors :",negative_predictors,"positive_predictors :",positive_predictors)
+
+
+print(significant_predictors('EricRosen',1000))
 
 # affichage et filtrations
 
