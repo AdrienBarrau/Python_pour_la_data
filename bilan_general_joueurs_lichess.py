@@ -63,7 +63,7 @@ class ChessGame:
         else : self.queen_exchange_bool= False
         if self.queen_exchange_bool :
             self.queen_exchange_move=max(self.white_queen_taken_move,self.black_queen_taken_move)
-        else : self.queen_exchange_move='NaN'
+        else : self.queen_exchange_move=None
 
     def _extract_moves(self, game):
         moves = []
@@ -318,7 +318,7 @@ def add_variables_perso (data): #this function takes the dataframe of the games 
         except IndexError :
             their_evals[i]=[None]
         if (First_eval is None) :
-            means_ev=['NaN' for k in range(4)]
+            means_ev=[None for k in range(4)]
             n= len(their_times[i])
             if n>26 : 
                 indices=[(0,6), (6,16), (16,26),(26,n)] #split the moves in four categories : opening (5 moves), middle game 1 (10 moves), middle game 2 (10 moves), end game (The remaining moves) 
@@ -327,15 +327,15 @@ def add_variables_perso (data): #this function takes the dataframe of the games 
             elif n>16 :
                 indices=[(0,6), (6,16),(16,n)]
                 means_time=[sta.mean(their_times[i][a:b]) for a,b in indices]
-                means_time.append('NaN') #NaN is added if there wasn't enough moves in the game to complete the last slices
+                means_time.append(None) #NaN is added if there wasn't enough moves in the game to complete the last slices
                 Len_game.append("Medium")
             elif n>6 :
                 indices=[(0,6), (6,n)]
                 means_time=[sta.mean(their_times[i][a:b]) for a,b in indices]
-                means_time+=['NaN','NaN']
+                means_time+=[None,None]
                 Len_game.append("Short")
             else : #If the game had less than 6 moves the analysis in terms of opening, middle game, is not useful : nothing is computed
-                means_time=['NaN' for k in range(4)]
+                means_time=[None for k in range(4)]
                 Len_game.append("Too Short")
         else :
             their_evals_clean_i=[]
@@ -354,19 +354,19 @@ def add_variables_perso (data): #this function takes the dataframe of the games 
                 indices=[(0,6), (6,16),(16,n)]
                 means_ev=[sta.mean(their_evals_clean_i[a:b]) for a,b in indices]
                 means_time=[sta.mean(their_times[i][a:b]) for a,b in indices]
-                means_time.append('NaN') #NaN is added if there wasn't enough moves in the game to complete the last slices
-                means_ev.append('NaN')
+                means_time.append(None) #NaN is added if there wasn't enough moves in the game to complete the last slices
+                means_ev.append(None)
                 Len_game.append("Medium")
             elif n>6 :
                 indices=[(0,6), (6,n)]
                 means_ev=[sta.mean(their_evals_clean_i[a:b]) for a,b in indices]
                 means_time=[sta.mean(their_times[i][a:b]) for a,b in indices]
-                means_time+=['NaN','NaN']
-                means_ev+=['NaN','NaN']
+                means_time+=[None,None]
+                means_ev+=[None,None]
                 Len_game.append("Short")
             else : #If the game had less than 6 moves the analysis in terms of opening, middle game, is not useful : nothing is computed
-                means_ev=['NaN' for k in range(4)]
-                means_time=['NaN' for k in range(4)]
+                means_ev=[None for k in range(4)]
+                means_time=[None for k in range(4)]
                 Len_game.append("Too Short")
     
         m_o_r.append(means_ev[0]) #Then the computed measures are added
@@ -529,11 +529,11 @@ def important_events (moves) : #This function takes a sequence of moves in UCI f
     return Events
 
 def main_events (events,color,piece) : #This function takes a list of events in a game (computed by important events), the color as a string 'W', the type of piece as a string 'Q', and gives back a tuple
-    #first a boolean of wether or not that piece was taken during the game (or the castling made), then either an integer (if that piece was taken) that stands for the move at which it happened; or a string 'NaN' if the piece was not taken
+    #first a boolean of wether or not that piece was taken during the game (or the castling made), then either an integer (if that piece was taken) that stands for the move at which it happened; or a string None if the piece was not taken
     for i in events:
         if [*i[0][0]][0]==color and [*i[0][0]][1]==piece :
             return (True,i[1])
-    return (False,'NaN')
+    return (False,None)
 
 username='EricRosen'
 
