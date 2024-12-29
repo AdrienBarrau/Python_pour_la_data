@@ -1,6 +1,6 @@
-# Projet de programmation 2024 ♟️
+# Python Pour La Data-Science : diagnostic des erreurs dans les parties d'échecs en ligne ♟️
 
-Adrien Barrau, Etienne Chastel, Alban Géron
+*Adrien Barrau, Etienne Chastel, Alban Géron*
 
 
 ## Sujet
@@ -23,6 +23,7 @@ Les données utilisées sont celles de la plateforme Lichess (https://database.l
 Au cours de ce projet nous produisons différents types de statistiques.
 
 Nous fournissons d'abord des statistiques descriptives sur l'ensemble des parties jouées. Le code peut fonctionner sur tout type de base de données importée depuis Lichess. Néanmoins, à titre d'exemple, nous proposons ici de nous intéresser aux parties jouées en septembre 2014. L'objectif est de produire des graphiques et résultats utiles autour de quelques variables clés calculées à partir des données brutes. Cela permet d'être mieux renseigné.e sur l'ensemble des parties.
+
 Nous fournissons ensuite des statistiques inférentielles sur l'ensemble des parties jouées par un.e joueu.se.r spécifique de Lichess. À titre d'exemple, nous nous intéressons ici aux parties du joueur 'EricRosen', un célebre streameur d'échecs. Le modèle choisi est un modèle logistique : nous regardons quelles variables produisent un effet significatif sur le resultat d'une partie : la victoire ou non du joueur considéré. Cela permet d'obtenir les meilleurs prédicteurs de victoire ou de défaite de ce joueur, et donc d'adapter sa stratégie pour maximiser ses propres chances de victoire face à ce joueur.
 
 
