@@ -27,4 +27,4 @@ Nous fournissons ensuite des statistiques inférentielles sur l'ensemble des par
 
 Navigation
 
-Pour naviguer dans ce projet il faut d'abord se rendre sur le lien suivant : https://database.lichess.org/#standard_games et importer le fichier "lichess_db_standard_rated_2014-09.pgn.zst". Il suffit ensuite d'executer toutes les cellules du notebook.
+Pour naviguer dans ce projet il faut d'abord se rendre sur le lien suivant : https://database.lichess.org/#standard_games et importer le fichier "lichess_db_standard_rated_2014-09.pgn.zst". Il suffit ensuite d'executer toutes les cellules du notebook notebook_lichess.ipynb.
