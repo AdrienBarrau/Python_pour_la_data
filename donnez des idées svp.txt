@@ -1,9 +1,0 @@
-# faire graphe avec des joeurs (qui analysent toutes leurs games sinon il y a un biais enorme!!!!) tiree au hasard dans differentes tranches elo et avoir en abscisse le elo et ordonnee la perte moyenne en centipion par parties 
-#faire variables pour donner conseils individuel: echanges dames, combien de mat en 1,2,3 manqued, combien de retournement de situation (arnaqueur ou arnaquee), gestion du temps, ouvertures, finales
-# au niveau individuel, regarder la frequence d analyse des parties, voir si y a un biais( ex: analyser que les parties gagne ou perdu, calculer ca pour chaques joueurs)
-#erreurs les plus frequentes
-#faire de la classification : prevoir le elo en fonction du nombre de parties dans differents types, des ouvertures jouee.
-#regressions pour connaitre la qualite des coups quand on est mieux(eval >2  si on est blanc par exemple), ou moins bien (eval<-2 si on est blanc)
-#verifier si le systeme de elo marche (reg)
-# faire une heatmap 
-# lien entre elo et perte centipions
