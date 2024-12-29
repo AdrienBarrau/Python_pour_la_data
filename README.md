@@ -5,7 +5,7 @@ Adrien Barrau, Etienne Chastel, Alban Géron
 
 Sujet
 
-Les meilleur.e.s joueu.se.r.s d'échecs, en amont de parties importantes réalisent souvent des analyses de la concurrence. Il s'agit d'abord de se renseigner sur les pratiques les plus communes au sein de la communauté des joueu.se.r.s d'échec. D'avoir en tête les ouvertures pratiquées, les caractéristiques typiques des parties réalisé par les joueu.ses.rs. Il s'agit ensuite de se renseigner sur les habitudes d'un.e joueu.se.r en particulier, en amont d'une partie, pour se préparer au mieux. Cette analyse de la concurrence est essentielle pour se tenir au fait des tendances actuelles et pour se préparer au mieux. Elle est néanmoins coûteuse en temps, pour receuillir et anaylser des données sur un grand nombre de joueu.se.r.s. 
+Les meilleur.e.s joueu.se.r.s d'échecs, en amont de parties importantes réalisent souvent des analyses de la concurrence. Il s'agit d'abord de se renseigner sur les pratiques les plus communes au sein de la communauté des joueu.se.r.s d'échec. D'avoir en tête les ouvertures pratiquées, les caractéristiques typiques des parties réalisé par les joueu.ses.rs. Il s'agit ensuite de se renseigner sur les habitudes d'un.e joueu.se.r en particulier, en amont d'une partie, pour se préparer au mieux. Cette analyse de la concurrence est essentielle pour se tenir au fait des tendances actuelles et pour se préparer au mieux. Elle est néanmoins coûteuse en temps, pour recueillir et anaylser des données sur un grand nombre de joueu.se.r.s. 
 
 
 Projet
