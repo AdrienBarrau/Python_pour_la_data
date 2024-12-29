@@ -274,13 +274,15 @@ def plays_white(data): #this function takes the dataframe of the games of one pl
             White.append(0)
     return White
 
-def won (data) : #this function takes the dataframe of the games of one player and gives back a column composed of 0s and 1s : 1 if the player played white
+def won (data) :
     Won=[]
     for i in range(len(data['Result'])):
-        if data['Plays_white'][i]==1:
-            Won.append(int([*data['Result'][i]][0]))
-        else:
-            Won.append(int([*data['Result'][i]][2]))
+        if data['Result'][i][1]!='/':
+            if data['Plays_white'][i]==1:
+                Won.append(int([*data['Result'][i]][0]))
+            else:
+                Won.append(int([*data['Result'][i]][2]))
+        else : Won.append(0)
     return Won
 
 def convert_clock(list_clock): #this function converts a chess clock in format '00:00:59" into an integer that is the number of seconds
