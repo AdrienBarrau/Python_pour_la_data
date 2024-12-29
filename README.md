@@ -1,1 +1,1 @@
-telecharger(sur https://database.lichess.org/#standard_games) et importer le fichier "lichess_db_standard_rated_2014-09.pgn.zst",puis executer dans l'ordre: analyse_personnelle.py, bilan_general_joueurs_lichess.py, bilan_general_2.py, regressions.py 
+telecharger(sur https://database.lichess.org/#standard_games) et importer le fichier "lichess_db_standard_rated_2014-09.pgn.zst" sur le notebook puis executer toutes les cellules
